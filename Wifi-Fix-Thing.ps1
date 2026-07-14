@@ -12,40 +12,52 @@ function Logo-instructions {
 "@
 
     Write-Host ""
-    Write-Host "This script will run a steps commands to troubleshoot wifi issues"
+    Write-Host "This script is designed to troubleshoot WiFi issues for non-technical users :)"
     Write-Host ""
+    Write-Host "===== Options Available ====="
+    Write-Host "1. Restart Wifi Antenna"
+    Write-Host "2. Restart Computer Internet"
+    Write-Host "3. Clear Domain Name Server (DNS) Cache"
+    Write-Host "4. Get Wifi Antenna Status"
+    Write-Host "5. Reboot Computer"
+    Write-Host "6. Help"
+    Write-Host "7. Exit"
+    Write-Host ""
+
+
 
 }
 
 function Get-interfaces-status {
-
-    $Adapters = Get-NetAdapter | Sort-Object -Property ifIndex
+    $adapters = Get-NetAdapter | Sort-Object -Property ifIndex
 
     #If no interfaces are found notify the user
     if (-not $adapters) {
         Write-Host "No network adapter found." -ForegroundColor red 
+        Write-Host ""
+        Read-Host "Press Enter to return to the menu..."
         return
     }
 
     #Output the status of each interface
-    foreach ($adapter in $adpaters) {
+    foreach ($adapter in $adapters) {
 
         #Color code based on status
         switch ($adapter.Status) {
             'Up'            { $statusColor = 'Green' }
-            'Disconnected'  { $StatusColor = 'Yellow' }
-            'Disabled'      { $StatusColor = 'DarkGray' }
-            default         { $Status Color = 'Red' }
+            'Disconnected'  { $statusColor = 'Yellow' }
+            'Disabled'      { $statusColor = 'DarkGray' }
+            default         { $statusColor = 'Red' }
         }
     Write-Host ""
     Write-Host "[$($adapter.Name)]" -NoNewline -ForegroundColor White
     Write-Host "$($adapter.Status)" -ForegroundColor $statusColor
     Write-Host " Description : $($adapter.InterfaceDescription)"
-    Write-Host " Link Speed : $(adapter.LinkSpeed)"
+    Write-Host " Link Speed : $($adapter.LinkSpeed)"
 
     #Pull info of online interfaces
     if ($adapter.Status -eq 'Up') {
-        $ipConfig = Get-NetIPAddress -InerfaceIndex $adapter.ifIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue
+        $ipConfig = Get-NetIPAddress -InterfaceIndex $adapter.ifIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue
 
         if ($ipConfig) {
             foreach ($ip in $ipConfig) {
@@ -53,29 +65,31 @@ function Get-interfaces-status {
 
             }
         } 
-        }else {
+        } else {
             Write-Host " IP Address : none assigned" -ForegroundColor Yellow
-    }
+        }
 
     #Get DNS info of online interfaces
-    $DnsServers = Get-DnsClientServerAddress -InterfaceIndex $adapter.ifIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue
+     $DnsServer = Get-DnsClientServerAddress -InterfaceIndex $adapter.ifIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue
     
-    if ($dnsServer -and $dnsServer.ServerAddresses.Count -gt 0) {
-        $dnsList = $dnsServers.ServerAddresses -join ", "
-        Write-Host = " DNS Servers : $dnsList"
+    if ($DnsServer -and $DnsServer.ServerAddresses.Count -gt 0) {
+        $dnsList = $DnsServer.ServerAddresses -join ", "
+        Write-Host " DNS Server : $dnsList"
     } else {
-        Write-Host " DNS Servers : none configured" -ForegroundColor Yellow
+        Write-Host " DNS Server : none configured" -ForegroundColor Yellow
     }
     }  
+    
+    Write-Host ""
+    Read-Host "Press Enter to return to the menu..."
 }
 
 function FlushDNSChache {
-
     Write-Host ""
     Write-Host "======== Flushing DNS Chache ========" -ForegroundColor Cyan
 
     try {
-        Clears-DnsClentCache -ErrorAction Stop 
+        Clear-DnsClientCache -ErrorAction Stop 
         Write-Host "DNS chache has been flushed successfully"
     } catch {
         Write-Host "Clear-DnsClientChache failed: $($_.Exception.Message)" -ForegroundColor Yellow
@@ -91,8 +105,10 @@ function FlushDNSChache {
         }
 
     Write-Host ""
+    Read-Host "Press Enter to return to the menu..."
 
     }
+}
 
 function Restart-NetworkServices {
     if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) {
@@ -105,7 +121,7 @@ function Restart-NetworkServices {
         @{ Name = "Dnscache";   Label = "DNS Client"},
         @{ Name = "Netman";   Label = "Network Connections"},
         @{ Name = "NlaSvc";   Label = "Network Location Awareness"},
-        @{ Name = "netprofm";   Label = "Netwokr List Service"},
+        @{ Name = "netprofm";   Label = "Network List Service"},
     )
 
     Write-Host ""
@@ -115,9 +131,9 @@ function Restart-NetworkServices {
 
     foreach ($svc in $services) {
         try {
-            $services = Get-Service -Name $svc.Name -ErrorAction Stop
+            $serviceObj = Get-Service -Name $svc.Name -ErrorAction Stop
 
-            if ($services.Status -eq 'Running') {
+            if ($serviceObj.Status -eq 'Running') {
                 Write-Host "Restarting $($svc.Label) | ($($svc.Name))..." -NoNewline
                 Restart-Service -Name $svc.Name -Force -ErrorAction Stop
                 Write-Host " Done." -ForegroundColor Green
@@ -129,11 +145,13 @@ function Restart-NetworkServices {
         } catch {
             Write-Host " FAILED: $($_.Exception.Message)" -ForegroundColor Red
         }
+    }
 
     Write-Host ""
-    Write-Host "Core network services have restarted. Give it a few seconds, the re-check connectivity." -ForegroundColor Yellow
+    Write-Host "Core network services have restarted. Give it a few seconds, then re-check connectivity." -ForegroundColor Yellow
     Write-Host ""
-    }
+    Read-Host "Press Enter to return to menu..." 
+    
 }
 
 function Restart-WlanAdapter {
@@ -146,7 +164,7 @@ function Restart-WlanAdapter {
     Write-Host "=== Restarting Wireless Adapter ===" -ForegroundColor Cyan
 
     #Priamry method by matching physical media type
-    $WlanAdapters = Get-NetAdapter | Where-Object { $_.PhysicalMediaType -e "Native 802.11" }
+    $WlanAdapters = Get-NetAdapter | Where-Object { $_.PhysicalMediaType -eq "Native 802.11" }
 
     #Fallback method by matching description
     if (-not $WlanAdapters) {
@@ -169,7 +187,7 @@ function Restart-WlanAdapter {
         Write-Host "Current status: $($adapter.Status)"
 
         $confirm_restart = Read-Host "Restart this adapter? (Y/N)"
-        if ($confirm_restart -nomatch '^[Yy]') {
+        if ($confirm_restart -notmatch '^[Yy]') {
             Write-Host "Will not restart adapter: $($adapter.Name)." -ForegroundColor Yellow
             continue
         }
@@ -197,14 +215,13 @@ function Restart-WlanAdapter {
 }
 
 function Reboot-Computer {
-
     Write-Host ""
     Write-Host "=== Restart Computer ===" -ForegroundColor Cyan
     Write-Host "***Before you restart save any work on your computer***"
 
     $confirm_reboot = Read-Host "Would you like to restart the computer? (Y/N)"
 
-    if ($confirm_reboot -nomatch '^[Yy]') {
+    if ($confirm_reboot -notmatch '^[Yy]') {
         Write-Host "Will not restart the computer." -ForegroundColor Yellow
         return
     }
@@ -216,10 +233,41 @@ function Reboot-Computer {
 
 }
 
+function Show-Help {
+    $readmePath = Join-Path $PSScriptRoot "README.md"
 
+    if (Test-Path $readmePath) {
+        #Open the Readme file
+        Invoke-Item $readmePath
+    } else {
+        Write-Host "README.md not found, please open it manually in the script folder."
+    }
+}
+function Exit-Script {
+    Write-Host "Exiting Script..."
+    exit
 }
 
+#Run the script as a While True loop
+do {
+    #Run Logo funciton
+    Logo-instructions
 
-#Run all the functions here
-Logo-instructions
+    #Input user choice
+    $Main_menu_input = Read-Host "Select an option [1-7]: "
 
+    #Ask user for main menu options
+    switch ($Main_menu_input) { 
+        "1" { Restart-WlanAdapter}
+        "2" { Restart-NetworkServices }
+        "3" { FlushDNSChache }
+        "4" { Get-interfaces-status }
+        "5" { Reboot-Computer }
+        "6" { Show-Help }
+        "7" { Exit-Script }
+        default { 
+            Write-Host "Option not found, please select an option form the menu [1-7]." -ForegroundColor Red
+            Start-Sleep -Seconds 2
+        }
+    }
+} while ($true)
