@@ -111,7 +111,7 @@ function FlushDNSChache {
 }
 
 function Restart-NetworkServices {
-    if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) {
+    if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
         Write-Host "This funciton requires Administrator rights. Re-run this script as Administrator." -ForegroundColor Red
         return
     }
@@ -121,7 +121,7 @@ function Restart-NetworkServices {
         @{ Name = "Dnscache";   Label = "DNS Client"},
         @{ Name = "Netman";   Label = "Network Connections"},
         @{ Name = "NlaSvc";   Label = "Network Location Awareness"},
-        @{ Name = "netprofm";   Label = "Network List Service"},
+        @{ Name = "netprofm";   Label = "Network List Service"}
     )
 
     Write-Host ""
@@ -155,7 +155,7 @@ function Restart-NetworkServices {
 }
 
 function Restart-WlanAdapter {
-    if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) {
+    if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
         Write-Host "This option requires Administration priviliges. Re-run this script as Administrator." -ForegroundColor Red
         return
     } 
