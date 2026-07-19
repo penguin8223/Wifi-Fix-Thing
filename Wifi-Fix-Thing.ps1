@@ -104,8 +104,8 @@ function FlushDNSChache {
             Write-Host "Could not confirm the cache was flushed. Try running this script as Administrator." -ForegroundColor Red
         }
 
-    Write-Host ""
-    Read-Host "Press Enter to return to the menu..."
+Write-Host ""
+Read-Host "Press Enter to return to the menu..."
 
     }
 }
