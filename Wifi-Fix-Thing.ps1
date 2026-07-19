@@ -211,6 +211,8 @@ function Restart-WlanAdapter {
 
     Write-Host ""
     }
+
+    Read-Host "Press Enter to return to the menu..."
 }
 
 function Reboot-Computer {
