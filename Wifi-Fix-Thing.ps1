@@ -112,6 +112,8 @@ Read-Host "Press Enter to return to the menu..."
 function Restart-NetworkServices {
     if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
         Write-Host "This funciton requires Administrator rights. Re-run this script as Administrator." -ForegroundColor Red
+        Write-Host ""
+        Read-Host "Press Enter to return to the menu..."
         return
     }
 
@@ -156,6 +158,8 @@ function Restart-NetworkServices {
 function Restart-WlanAdapter {
     if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
         Write-Host "This option requires Administration priviliges. Re-run this script as Administrator." -ForegroundColor Red
+        Write-Host ""
+        Read-Host "Press Enter to return to the menu..."
         return
     } 
 
@@ -177,6 +181,8 @@ function Restart-WlanAdapter {
         Write-Host ""
         Write-Host "No wireless adapter could be identified." -ForegroundColor Red
         Write-Host "Try Manually seraching for the wireless adapter" -ForegroundColor Yellow
+        Write-Host ""
+        Read-Host "Press Enter to return to the menu..."
         return
     }
 
